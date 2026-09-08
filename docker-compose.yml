@@ -1,0 +1,67 @@
+# Development environment for the Physiotherapy Clinic platform.
+# Bring everything up with:  docker compose up --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: physio_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-physio_clinic}
+      POSTGRES_USER: ${POSTGRES_USER:-physio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-physio}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-physio} -d ${POSTGRES_DB:-physio_clinic}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: physio_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: physio_backend
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_DEBUG: "True"
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: physio_frontend
+    command: sh -c "npm run dev"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

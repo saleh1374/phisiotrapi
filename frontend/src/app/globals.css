@@ -1,0 +1,56 @@
+@import "@fontsource/vazirmatn/300.css";
+@import "@fontsource/vazirmatn/400.css";
+@import "@fontsource/vazirmatn/500.css";
+@import "@fontsource/vazirmatn/700.css";
+@import "@fontsource/vazirmatn/900.css";
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1b2a4a;
+  --color-navy-light: #2c3f66;
+  --color-navy-dark: #131f38;
+  --color-emerald: #2d6a4f;
+  --color-emerald-light: #3f8a68;
+  --color-gold: #d4a373;
+  --color-gold-light: #e6c39a;
+  --color-cream: #faf7f2;
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--color-navy);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure nothing overflows horizontally on small screens (spec: 320px+). */
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Nice, subtle focus ring for keyboard users (WCAG 2.1). */
+:focus-visible {
+  outline: 2px solid var(--color-emerald);
+  outline-offset: 2px;
+}
+
+/* Fluid type scale across 320px → 1920px. */
+h1 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: clamp(1.375rem, 2.5vw, 2rem);
+  line-height: 1.35;
+}
