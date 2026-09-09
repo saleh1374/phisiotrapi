@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Providers from "@/components/Providers";
@@ -13,6 +14,17 @@ export const metadata: Metadata = {
   },
   description:
     "کلینیک فیزیوتراپی — رزرو نوبت آنلاین، کتابخانه فیلم‌های آموزشی اختصاصی، آکادمی دوره‌های تخصصی و مجله علمی فیزیوتراپی.",
+  applicationName: "کلینیک فیزیوتراپی",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1b2a4a",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -22,6 +34,7 @@ export default function RootLayout({
     <html lang="fa" dir="rtl">
       <body className="flex min-h-screen flex-col bg-white text-navy antialiased">
         <Providers>
+          <AnnouncementBanner />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

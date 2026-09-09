@@ -2,6 +2,7 @@ export type UserRole = "patient" | "doctor" | "admin" | "author";
 
 export interface User {
   id: string;
+  username: string | null;
   full_name: string;
   phone_number: string;
   email: string | null;

@@ -5,6 +5,7 @@ import { Clock, GraduationCap, PlayCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import LoadingState from "@/components/LoadingState";
 import { apiFetch } from "@/lib/api";
 import { faNum, faPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -98,7 +99,7 @@ export default function AcademyPage() {
 
       {/* Grid */}
       {isLoading ? (
-        <p className="mt-8 text-navy/50">در حال بارگذاری...</p>
+        <LoadingState className="mt-8" />
       ) : (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (

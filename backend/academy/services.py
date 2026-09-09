@@ -36,12 +36,23 @@ def grant_access(user, course: Course) -> Order:
 
 
 def enroll(user, course: Course) -> Order:
-    """Enroll a user in a course. Free courses grant access instantly."""
-    existing = Order.objects.filter(user=user, course=course, payment_status=Order.PaymentStatus.PAID).first()
+    """Enroll a user in a course. Free courses grant access instantly.
+
+    For paid courses an existing pending order is reused (idempotent), so a
+    patient can never accumulate duplicate unpaid orders for the same course.
+    """
+    existing = Order.objects.filter(
+        user=user, course=course, payment_status=Order.PaymentStatus.PAID
+    ).first()
     if existing:
         return existing
     if course.is_free or course.final_price == 0:
         return grant_access(user, course)
+    pending = Order.objects.filter(
+        user=user, course=course, payment_status=Order.PaymentStatus.PENDING
+    ).first()
+    if pending:
+        return pending
     # Paid course: create a pending order; the frontend then "pays" (dev mock).
     return Order.objects.create(
         user=user, course=course, amount_paid=course.final_price, payment_status=Order.PaymentStatus.PENDING

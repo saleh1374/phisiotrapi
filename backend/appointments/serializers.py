@@ -50,6 +50,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
     service_type_display = serializers.CharField(source="get_service_type_display", read_only=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     date_display = serializers.SerializerMethodField()
+    # Compact HH:MM instead of the default HH:MM:SS.
+    start_time = serializers.TimeField(format="%H:%M")
+    end_time = serializers.TimeField(format="%H:%M")
 
     class Meta:
         model = Appointment
@@ -97,8 +100,12 @@ class HolidaySerializer(serializers.ModelSerializer):
 
 
 class AppointmentStatusSerializer(serializers.Serializer):
+    """All statuses a doctor or admin may set from the panels."""
+
     status = serializers.ChoiceField(
         choices=[
+            Appointment.Status.PENDING,
+            Appointment.Status.CONFIRMED,
             Appointment.Status.COMPLETED,
             Appointment.Status.NO_SHOW,
             Appointment.Status.CANCELED_ADMIN,

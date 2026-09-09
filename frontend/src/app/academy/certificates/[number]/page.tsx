@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, ShieldAlert } from "lucide-react";
 import { useParams } from "next/navigation";
 
+import LoadingState from "@/components/LoadingState";
 import { apiFetch } from "@/lib/api";
 import { faDate, faNum } from "@/lib/utils";
 
@@ -37,7 +38,7 @@ export default function CertificateVerifyPage() {
   return (
     <section className="mx-auto flex min-h-[70vh] w-full max-w-2xl items-center justify-center px-4 py-12">
       {isLoading ? (
-        <p className="text-navy/50">در حال استعلام...</p>
+        <LoadingState label="در حال استعلام..." />
       ) : !data || !data.valid ? (
         <div className="w-full rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
           <ShieldAlert className="mx-auto h-14 w-14 text-red-500" />

@@ -18,8 +18,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     full_name = models.CharField("نام و نام خانوادگی", max_length=100, blank=True)
+    # Username is the primary login identifier; phone number is optional
+    # (password + Google sign-in work without it).
+    username = models.CharField("نام کاربری", max_length=30, unique=True, null=True, blank=True)
     national_code = models.CharField("کد ملی", max_length=10, unique=True, null=True, blank=True)
-    phone_number = models.CharField("شماره موبایل", max_length=11, unique=True)
+    phone_number = models.CharField("شماره موبایل", max_length=11, unique=True, null=True, blank=True)
     email = models.EmailField("ایمیل", max_length=255, unique=True, null=True, blank=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.PATIENT)
     profile_pic = models.URLField("تصویر پروفایل", max_length=500, blank=True)
@@ -36,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "phone_number"
+    USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
 
     class Meta:

@@ -335,8 +335,8 @@ export default function HomePage() {
           <div className="relative">
             <h2 className="font-bold">همین حالا نوبت خود را رزرو کنید</h2>
             <p className="mx-auto mt-3 max-w-lg leading-8 text-white/70">
-              ثبت‌نام تنها چند ثانیه زمان می‌برد؛ با شماره موبایل وارد شوید و از
-              تمام خدمات استفاده کنید.
+              ثبت‌نام تنها چند ثانیه زمان می‌برد؛ با نام کاربری و رمز عبور یا
+              حساب گوگل وارد شوید و از تمام خدمات استفاده کنید.
             </p>
             <Link
               href="/register"

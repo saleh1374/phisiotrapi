@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { HeartPulse, ShieldCheck, Sparkles } from "lucide-react";
 
-import OtpAuthForm from "@/components/OtpAuthForm";
+import CredentialsAuthForm from "@/components/CredentialsAuthForm";
 
 export const metadata: Metadata = {
   title: "ثبت‌نام",
@@ -25,12 +25,12 @@ export default function RegisterPage() {
           <div className="absolute bottom-0 p-8 text-white">
             <h1 className="text-2xl font-black">به جمع ما بپیوندید ✨</h1>
             <p className="mt-2 text-sm leading-7 text-white/85">
-              ثبت‌نام فقط با شماره موبایل و در چند ثانیه. حساب شما ساخته می‌شود
-              و به تمام خدمات کلینیک دسترسی خواهید داشت.
+              ثبت‌نام با نام کاربری و رمز عبور یا حساب گوگل، فقط در چند ثانیه.
+              حساب شما ساخته می‌شود و به تمام خدمات کلینیک دسترسی خواهید داشت.
             </p>
             <div className="mt-4 flex gap-4 text-white/85">
               <span className="flex items-center gap-1.5 text-xs">
-                <ShieldCheck className="h-4 w-4" /> امن و بدون رمز عبور
+                <ShieldCheck className="h-4 w-4" /> امن و بدون نیاز به شماره موبایل
               </span>
               <span className="flex items-center gap-1.5 text-xs">
                 <HeartPulse className="h-4 w-4" /> سلامتی شما مهم است
@@ -38,7 +38,7 @@ export default function RegisterPage() {
             </div>
           </div>
         </div>
-        <OtpAuthForm mode="register" />
+        <CredentialsAuthForm mode="register" />
       </div>
     </section>
   );

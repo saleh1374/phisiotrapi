@@ -52,12 +52,14 @@ class VideoDetailView(generics.RetrieveAPIView):
 
 
 class VideoCreateView(generics.CreateAPIView):
-    """Create a video (admin or doctor)."""
+    """Create a video (admin or doctor only)."""
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = VideoWriteSerializer
 
     def perform_create(self, serializer):
+        if not (self.request.user.is_admin_user or self.request.user.role == "doctor"):
+            self.permission_denied(self.request)
         serializer.save(uploaded_by=self.request.user)
 
 

@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     "videos.apps.VideosConfig",
     "academy.apps.AcademyConfig",
     "news.apps.NewsConfig",
+    "siteconfig.apps.SiteconfigConfig",
+    "admin_api.apps.AdminApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -152,6 +154,11 @@ REST_FRAMEWORK = {
     # simpler for the frontend. Add per-view pagination if the data grows.
     "PAGE_SIZE": None,
 }
+
+# ---------------------------------------------------------------------------
+# Google OAuth (sign in with Google) — empty client ID disables the button.
+# ---------------------------------------------------------------------------
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
 SIMPLE_JWT = {
     # Spec: access token valid for 24h, refresh token for 7 days.

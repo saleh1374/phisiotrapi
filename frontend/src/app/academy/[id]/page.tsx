@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import LoadingState from "@/components/LoadingState";
 import VideoPlayer from "@/components/VideoPlayer";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { faNum, faPrice } from "@/lib/utils";
@@ -129,8 +130,8 @@ export default function CourseDetailPage() {
 
   if (!course) {
     return (
-      <section className="mx-auto max-w-5xl px-4 py-16 text-center">
-        <p className="text-navy/50">در حال بارگذاری دوره...</p>
+      <section className="mx-auto max-w-5xl px-4 py-16">
+        <LoadingState label="در حال بارگذاری دوره..." />
       </section>
     );
   }

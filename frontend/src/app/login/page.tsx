@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { CalendarCheck2, GraduationCap, ShieldCheck, Video } from "lucide-react";
 
-import OtpAuthForm from "@/components/OtpAuthForm";
+import CredentialsAuthForm from "@/components/CredentialsAuthForm";
 
 export const metadata: Metadata = {
   title: "ورود",
@@ -25,8 +25,8 @@ export default function LoginPage() {
           <div className="absolute bottom-0 p-8 text-white">
             <h1 className="text-2xl font-black">خوش آمدید 🌿</h1>
             <p className="mt-2 text-sm leading-7 text-white/80">
-              با ورود می‌توانید نوبت رزرو کنید، فیلم‌های تجویزی پزشک را ببینید و
-              به دوره‌های آکادمی دسترسی داشته باشید.
+              با نام کاربری و رمز عبور یا حساب گوگل وارد شوید؛ نوبت رزرو کنید،
+              فیلم‌های تجویزی پزشک را ببینید و به دوره‌های آکادمی دسترسی داشته باشید.
             </p>
             <div className="mt-4 flex gap-4 text-white/70">
               <span className="flex items-center gap-1.5 text-xs">
@@ -41,7 +41,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-        <OtpAuthForm mode="login" />
+        <CredentialsAuthForm mode="login" />
       </div>
     </section>
   );

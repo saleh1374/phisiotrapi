@@ -27,12 +27,19 @@ VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/B
 class Command(BaseCommand):
     help = "Seed demo data for all modules."
 
+    def _ensure_username(self, user, username: str):
+        """Give a demo user a readable username (keep existing custom ones)."""
+        if user.username != username:
+            user.username = username
+            user.save(update_fields=["username"])
+
     @transaction.atomic
     def handle(self, *args, **options):
         # ---------------------------------------------------------- users
         admin, created_admin = User.objects.get_or_create(
             phone_number="09120000000",
             defaults={
+                "username": "admin",
                 "full_name": "مدیر کلینیک",
                 "role": User.Role.ADMIN,
                 "is_staff": True,
@@ -40,14 +47,16 @@ class Command(BaseCommand):
                 "is_active": True,
             },
         )
-        if created_admin:
+        self._ensure_username(admin, "admin")
+        if created_admin or not admin.password or not admin.has_usable_password():
             admin.set_password("admin123")
             admin.save()
-            self.stdout.write(self.style.SUCCESS("✓ ادمین (09120000000 / admin123)"))
+            self.stdout.write(self.style.SUCCESS("✓ ادمین (admin / admin123)"))
 
         doctor, created_doctor = User.objects.get_or_create(
             phone_number="09120000001",
             defaults={
+                "username": "dr.sara",
                 "full_name": "دکتر سارا محمدی",
                 "role": User.Role.DOCTOR,
                 "specialty": "فیزیوتراپی ورزشی",
@@ -56,14 +65,16 @@ class Command(BaseCommand):
                 "is_active": True,
             },
         )
-        if created_doctor:
+        self._ensure_username(doctor, "dr.sara")
+        if created_doctor or not doctor.password or not doctor.has_usable_password():
             doctor.set_password("demo1234")
             doctor.save()
-            self.stdout.write(self.style.SUCCESS("✓ پزشک (09120000001 / demo1234)"))
+            self.stdout.write(self.style.SUCCESS("✓ پزشک (dr.sara / demo1234)"))
 
         doctor2, created_doctor2 = User.objects.get_or_create(
             phone_number="09120000003",
             defaults={
+                "username": "dr.amir",
                 "full_name": "دکتر امیر کریمی",
                 "role": User.Role.DOCTOR,
                 "specialty": "توانبخشی عصبی",
@@ -72,17 +83,26 @@ class Command(BaseCommand):
                 "is_active": True,
             },
         )
-        if created_doctor2:
+        self._ensure_username(doctor2, "dr.amir")
+        if created_doctor2 or not doctor2.password or not doctor2.has_usable_password():
             doctor2.set_password("demo1234")
             doctor2.save()
-            self.stdout.write(self.style.SUCCESS("✓ پزشک دوم (09120000003)"))
+            self.stdout.write(self.style.SUCCESS("✓ پزشک دوم (dr.amir / demo1234)"))
 
         patient, created_patient = User.objects.get_or_create(
             phone_number="09120000002",
-            defaults={"full_name": "علی رضایی", "role": User.Role.PATIENT, "is_active": True},
+            defaults={
+                "username": "ali.rezaei",
+                "full_name": "علی رضایی",
+                "role": User.Role.PATIENT,
+                "is_active": True,
+            },
         )
-        if created_patient:
-            self.stdout.write(self.style.SUCCESS("✓ بیمار (09120000002)"))
+        self._ensure_username(patient, "ali.rezaei")
+        if created_patient or not patient.password or not patient.has_usable_password():
+            patient.set_password("demo1234")
+            patient.save()
+            self.stdout.write(self.style.SUCCESS("✓ بیمار (ali.rezaei / demo1234)"))
 
         # ------------------------------------------------------ schedules
         # دوشنبه تا پنجشنبه، ۹ تا ۱۷ با یک ساعت استراحت.

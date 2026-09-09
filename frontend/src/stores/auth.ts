@@ -9,9 +9,12 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   user: User | null;
+  /** True once the persisted session has been rehydrated from storage. */
+  hasHydrated: boolean;
   setAuth: (tokens: Tokens, user: User) => void;
   setUser: (user: User) => void;
   clearAuth: () => void;
+  setHydrated: (value: boolean) => void;
 }
 
 /** SSR-safe fallback storage: never touches the DOM. */
@@ -35,11 +38,13 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       user: null,
+      hasHydrated: false,
       setAuth: (tokens, user) =>
         set({ accessToken: tokens.access, refreshToken: tokens.refresh, user }),
       setUser: (user) => set({ user }),
       clearAuth: () =>
         set({ accessToken: null, refreshToken: null, user: null }),
+      setHydrated: (value) => set({ hasHydrated: value }),
     }),
     {
       name: "physio-auth",
@@ -49,6 +54,11 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: s.refreshToken,
         user: s.user,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Guard effects must wait for this before redirecting, otherwise a
+        // hard refresh on a protected page kicks the user to /login.
+        state?.setHydrated(true);
+      },
     }
   )
 );

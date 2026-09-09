@@ -34,6 +34,19 @@ class AcademyTests(TestCase):
         self.assertEqual(resp.status_code, 201, resp.content)
         self.assertEqual(resp.json()["payment_status"], "paid")
 
+    def test_paid_enroll_is_idempotent(self):
+        course = _make_course(free=False, price=500_000)
+        first = self.client.post(reverse("course-enroll", args=[course.id]))
+        second = self.client.post(reverse("course-enroll", args=[course.id]))
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        # Re-enrolling must return the same pending order, not a duplicate.
+        self.assertEqual(first.json()["id"], second.json()["id"])
+        self.assertEqual(
+            Order.objects.filter(user=self.user, course=course).count(),
+            1,
+        )
+
     def test_paid_course_requires_payment(self):
         course = _make_course(free=False, price=500_000)
         resp = self.client.post(reverse("course-enroll", args=[course.id]))

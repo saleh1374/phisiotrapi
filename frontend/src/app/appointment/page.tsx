@@ -16,10 +16,9 @@ import { useEffect, useMemo, useState } from "react";
 import JalaliCalendar, { faLongDate } from "@/components/JalaliCalendar";
 import EmptyState from "@/components/EmptyState";
 import { apiFetch, errorMessage } from "@/lib/api";
-import { faNum } from "@/lib/utils";
+import { cn, faNum } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/types";
-import { cn } from "@/lib/utils";
 
 const SERVICES = [
   "لیزر",
@@ -40,7 +39,7 @@ interface Slot {
 
 export default function AppointmentPage() {
   const router = useRouter();
-  const { accessToken } = useAuthStore();
+  const { accessToken, hasHydrated } = useAuthStore();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [service, setService] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
@@ -57,8 +56,8 @@ export default function AppointmentPage() {
   } | null>(null);
 
   useEffect(() => {
-    if (!accessToken) router.replace("/login");
-  }, [accessToken, router]);
+    if (hasHydrated && !accessToken) router.replace("/login");
+  }, [accessToken, hasHydrated, router]);
 
   const { data: doctors = [], isLoading: loadingDoctors } = useQuery({
     queryKey: ["doctors"],

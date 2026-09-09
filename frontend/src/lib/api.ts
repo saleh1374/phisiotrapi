@@ -84,12 +84,12 @@ export async function apiFetch<T>(
   let res = await rawFetch(path, options, withAuth);
 
   // One-shot refresh on 401, then retry the original request.
+  // rawFetch re-reads the fresh token from the store and re-applies the
+  // same headers (Content-Type, Accept, ...) as the first attempt.
   if (res.status === 401 && withAuth) {
     const newToken = await refreshAccessToken();
     if (newToken) {
-      const headers = new Headers(options.headers);
-      headers.set("Authorization", `Bearer ${newToken}`);
-      res = await fetch(`${API_URL}${path}`, { ...options, headers });
+      res = await rawFetch(path, options, withAuth);
     }
   }
 

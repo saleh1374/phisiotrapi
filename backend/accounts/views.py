@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.db.models import Q
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -8,10 +9,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from . import services
 from .models import User
 from .serializers import (
+    GoogleAuthSerializer,
     OTPRequestSerializer,
     OTPVerifySerializer,
     PasswordLoginSerializer,
     ProfileUpdateSerializer,
+    RegisterSerializer,
     UserSerializer,
 )
 from .throttles import LoginThrottle, OTPThrottle
@@ -84,8 +87,43 @@ class OTPVerifyView(APIView):
         )
 
 
+class RegisterView(APIView):
+    """Username + password registration (no phone number needed)."""
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginThrottle]
+    serializer_class = RegisterSerializer
+
+    @extend_schema(
+        request=RegisterSerializer,
+        responses={201: UserSerializer},
+    )
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        user = User.objects.create_user(
+            username=data["username"],
+            password=data["password"],
+            full_name=data.get("full_name", ""),
+        )
+        if data.get("email"):
+            user.email = data["email"]
+            user.save(update_fields=["email"])
+
+        return Response(
+            {
+                "tokens": _tokens_for(user),
+                "user": UserSerializer(user).data,
+                "is_new": True,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class PasswordLoginView(APIView):
-    """Password-based login for admins/doctors (patients use OTP)."""
+    """Password login — accepts either the username or the phone number."""
 
     permission_classes = [permissions.AllowAny]
     throttle_classes = [LoginThrottle]
@@ -99,21 +137,65 @@ class PasswordLoginView(APIView):
         serializer = PasswordLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        identifier = data["username"]
 
-        user = authenticate(
-            request,
-            username=data["phone_number"],
-            password=data["password"],
+        user = (
+            User.objects.filter(Q(username__iexact=identifier) | Q(phone_number=identifier))
+            .first()
         )
-        if user is None or not user.is_active:
+        if user is None or not user.is_active or not user.check_password(data["password"]):
             return Response(
-                {"detail": "شماره موبایل یا رمز عبور اشتباه است"},
+                {"detail": "نام کاربری یا رمز عبور اشتباه است"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(
             {
                 "tokens": _tokens_for(user),
                 "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class GoogleAuthView(APIView):
+    """Google sign-in: verifies the browser-provided ID token and logs in / registers."""
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = GoogleAuthSerializer
+
+    @extend_schema(
+        request=GoogleAuthSerializer,
+        responses={200: UserSerializer},
+    )
+    def post(self, request):
+        serializer = GoogleAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            payload = services.verify_google_token(serializer.validated_data["id_token"])
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_401_UNAUTHORIZED)
+
+        email = payload["email"].lower()
+        user = User.objects.filter(email__iexact=email).first()
+        created = user is None
+        if created:
+            user = User.objects.create_user(
+                username=services.username_from_email(email),
+                password=None,
+                full_name=payload.get("name", ""),
+                email=email,
+            )
+        if not user.is_active:
+            return Response(
+                {"detail": "حساب کاربری شما غیرفعال است"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return Response(
+            {
+                "tokens": _tokens_for(user),
+                "user": UserSerializer(user).data,
+                "is_new": created,
             },
             status=status.HTTP_200_OK,
         )

@@ -81,6 +81,15 @@ export default function Header() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  title="پنل مدیریت"
+                  className="inline-flex min-h-12 items-center rounded-xl bg-navy px-4 text-sm font-bold text-white transition-colors hover:bg-navy-light"
+                >
+                  پنل مدیریت
+                </Link>
+              )}
               <Link
                 href="/dashboard"
                 title="داشبورد من"
@@ -175,6 +184,15 @@ export default function Header() {
           <div className="mt-auto flex flex-col gap-3 border-t border-navy/10 p-4">
             {user ? (
               <>
+                {user.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    title="پنل مدیریت"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-navy px-4 text-sm font-bold text-white"
+                  >
+                    پنل مدیریت
+                  </Link>
+                )}
                 <Link
                   href="/dashboard"
                   title="داشبورد من"

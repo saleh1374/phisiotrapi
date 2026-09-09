@@ -10,6 +10,46 @@ from .models import OTP, User
 logger = logging.getLogger(__name__)
 
 
+def verify_google_token(id_token: str) -> dict:
+    """Verify a Google ID token (from Google Identity Services) and return its payload.
+
+    Uses Google's tokeninfo endpoint and checks the audience against
+    GOOGLE_CLIENT_ID. Raises ValueError on any failure.
+    """
+    import requests
+
+    resp = requests.get(
+        "https://oauth2.googleapis.com/tokeninfo",
+        params={"id_token": id_token},
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        raise ValueError("توکن گوگل نامعتبر یا منقضی شده است")
+    data = resp.json()
+    expected_aud = getattr(settings, "GOOGLE_CLIENT_ID", "")
+    if not expected_aud:
+        raise ValueError("ورود با گوگل هنوز پیکربندی نشده است")
+    if data.get("aud") != expected_aud:
+        raise ValueError("توکن گوگل برای این اپلیکیشن صادر نشده است")
+    if not data.get("email"):
+        raise ValueError("حساب گوگل شما آدرس ایمیل ندارد")
+    return data
+
+
+def username_from_email(email: str) -> str:
+    """Derive a unique username from a Google email address."""
+    import re
+
+    base = re.sub(r"[^a-zA-Z0-9_]", "", email.split("@")[0]) or "user"
+    base = base[:28]
+    candidate = base
+    suffix = 1
+    while User.objects.filter(username__iexact=candidate).exists():
+        suffix += 1
+        candidate = f"{base[:28 - len(str(suffix))]}{suffix}"
+    return candidate
+
+
 def normalize_phone(phone_number: str) -> str:
     """Normalize an Iranian phone number to the canonical 09xxxxxxxxx form."""
     phone = phone_number.replace(" ", "").replace("-", "")
@@ -21,18 +61,62 @@ def normalize_phone(phone_number: str) -> str:
 
 
 def _send_sms(phone_number: str, message: str) -> None:
-    """Send an SMS through the configured backend.
+    """Deliver the OTP through the backend chosen in the admin panel.
 
-    `console` backend simply logs the message (development default).
-    Production backends (e.g. Kavenegar) can be added here later.
+    - `console`: print the code to the server log (development default).
+    - `email`: send it via the SMTP account configured in the admin panel
+      (e.g. a Gmail account with an App Password). Falls back to console
+      when the recipient has no email address on file.
     """
-    backend = getattr(settings, "OTP_SMS_BACKEND", "console")
-    if backend == "console":
-        logger.info("[SMS→%s] %s", phone_number, message)
-        print(f"[SMS → {phone_number}] {message}")
-    else:
-        # Placeholder for a real SMS provider integration.
-        logger.warning("OTP_SMS_BACKEND=%s is not implemented yet; SMS not sent.", backend)
+    from siteconfig.models import SiteSetting
+
+    site = SiteSetting.get()
+    backend = site.otp_backend or getattr(settings, "OTP_SMS_BACKEND", "console")
+
+    if backend == SiteSetting.OTPBackend.EMAIL:
+        email = User.objects.filter(phone_number=phone_number).values_list("email", flat=True).first()
+        if email:
+            try:
+                _send_otp_email(site, email, message)
+                return
+            except Exception as exc:
+                logger.warning("OTP email failed (%s); falling back to console.", exc)
+        # No email on file or send failure → visible fallback.
+        print(f"[SMS → {phone_number}] {message}", flush=True)
+        return
+
+    # console (default)
+    logger.info("[SMS→%s] %s", phone_number, message)
+    # flush=True: with output redirected to a file (docker/dev servers),
+    # the buffered code would otherwise never reach the log in time.
+    print(f"[SMS → {phone_number}] {message}", flush=True)
+
+
+def _send_otp_email(site, email: str, message: str) -> None:
+    """Send the OTP through the SMTP account saved in site settings."""
+    from django.conf import settings as django_settings
+    from django.core import mail
+
+    if not site.smtp_host or not site.smtp_user or not site.smtp_password:
+        raise ValueError("SMTP تنظیم نشده است")
+
+    # Point the default email backend at the configured SMTP account.
+    django_settings.EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    django_settings.EMAIL_HOST = site.smtp_host
+    django_settings.EMAIL_PORT = site.smtp_port
+    django_settings.EMAIL_HOST_USER = site.smtp_user
+    django_settings.EMAIL_HOST_PASSWORD = site.smtp_password
+    django_settings.EMAIL_USE_TLS = site.smtp_use_tls
+    django_settings.EMAIL_USE_SSL = False
+
+    sender = site.email_from or site.smtp_user
+    mail.send_mail(
+        subject="کد تایید ورود | " + (site.site_name or "کلینیک"),
+        message=message,
+        from_email=sender,
+        recipient_list=[email],
+        fail_silently=False,
+    )
 
 
 def request_otp(phone_number: str) -> None:
@@ -80,10 +164,12 @@ def verify_otp(phone_number: str, code: str) -> User:
     otp.save(update_fields=["is_used"])
 
     # Register the user on first login (auto sign-up by phone number).
-    user, _ = User.objects.get_or_create(
+    user, created = User.objects.get_or_create(
         phone_number=phone,
         defaults={"is_active": True},
     )
-    user.last_login = timezone.now()
+    # For brand-new accounts, last_login mirrors created_at so the API's
+    # `is_new` flag is reliable (it compares the two timestamps).
+    user.last_login = user.created_at if created else timezone.now()
     user.save(update_fields=["last_login"])
     return user

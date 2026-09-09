@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import LoadingState from "@/components/LoadingState";
 import { apiFetch } from "@/lib/api";
 import { faDate } from "@/lib/utils";
 
@@ -30,8 +31,8 @@ export default function ArticlePage() {
 
   if (isLoading) {
     return (
-      <section className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-navy/50">در حال بارگذاری خبر...</p>
+      <section className="mx-auto max-w-3xl px-4 py-16">
+        <LoadingState label="در حال بارگذاری خبر..." />
       </section>
     );
   }

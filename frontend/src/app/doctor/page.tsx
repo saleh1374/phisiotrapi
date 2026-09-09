@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import LoadingState from "@/components/LoadingState";
 import StatusBadge from "@/components/StatusBadge";
 import { faLongDate } from "@/components/JalaliCalendar";
 import { apiFetch, errorMessage } from "@/lib/api";
@@ -34,7 +35,7 @@ interface Video {
 
 export default function DoctorPage() {
   const router = useRouter();
-  const { user, accessToken } = useAuthStore();
+  const { user, accessToken, hasHydrated } = useAuthStore();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"today" | "tomorrow" | "history">("today");
   const [prescribing, setPrescribing] = useState(false);
@@ -44,9 +45,10 @@ export default function DoctorPage() {
   const [prescribeMsg, setPrescribeMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!hasHydrated) return;
     if (!accessToken || !user) router.replace("/login");
     else if (user.role !== "doctor" && user.role !== "admin") router.replace("/dashboard");
-  }, [accessToken, user, router]);
+  }, [accessToken, user, hasHydrated, router]);
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ["doctor-appointments", tab],
@@ -208,7 +210,7 @@ export default function DoctorPage() {
       {/* Appointments */}
       <div className="mt-6 space-y-3">
         {isLoading ? (
-          <p className="text-navy/50">در حال بارگذاری...</p>
+          <LoadingState />
         ) : appointments.length === 0 ? (
           <EmptyState
             icon="📭"

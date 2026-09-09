@@ -5,6 +5,7 @@ import { Eye, PlayCircle, Search } from "lucide-react";
 import { useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import LoadingState from "@/components/LoadingState";
 import VideoPlayer from "@/components/VideoPlayer";
 import { apiFetch } from "@/lib/api";
 import { faNum } from "@/lib/utils";
@@ -105,7 +106,7 @@ export default function VideosPage() {
 
       {/* Grid */}
       {isLoading ? (
-        <p className="mt-8 text-navy/50">در حال بارگذاری...</p>
+        <LoadingState className="mt-8" />
       ) : videos.length === 0 ? (
         <div className="mt-8">
           <EmptyState

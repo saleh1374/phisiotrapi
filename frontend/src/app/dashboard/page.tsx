@@ -21,10 +21,9 @@ import EmptyState from "@/components/EmptyState";
 import StatusBadge from "@/components/StatusBadge";
 import VideoPlayer from "@/components/VideoPlayer";
 import { apiFetch } from "@/lib/api";
-import { faDate, faNum, faPrice } from "@/lib/utils";
+import { cn, faDate, faNum, faPrice } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/types";
-import { cn } from "@/lib/utils";
 
 interface Appointment {
   id: string;
@@ -81,13 +80,13 @@ interface Certificate {
 export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user, accessToken, clearAuth } = useAuthStore();
+  const { user, accessToken, hasHydrated, clearAuth } = useAuthStore();
   const [tab, setTab] = useState<"appointments" | "exercises" | "courses">("appointments");
   const [playing, setPlaying] = useState<Prescription | null>(null);
 
   useEffect(() => {
-    if (!accessToken || !user) router.replace("/login");
-  }, [accessToken, user, router]);
+    if (hasHydrated && (!accessToken || !user)) router.replace("/login");
+  }, [accessToken, user, hasHydrated, router]);
 
   const { data: appointments = [] } = useQuery({
     queryKey: ["my-appointments"],

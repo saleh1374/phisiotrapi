@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import EmptyState from "@/components/EmptyState";
+import LoadingState from "@/components/LoadingState";
 import { apiFetch } from "@/lib/api";
 import { faDate, faNum } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -72,7 +73,7 @@ export default function MagazinePage() {
       </div>
 
       {isLoading ? (
-        <p className="mt-8 text-navy/50">در حال بارگذاری...</p>
+        <LoadingState className="mt-8" />
       ) : articles.length === 0 ? (
         <div className="mt-8">
           <EmptyState
