@@ -10,11 +10,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 app = Celery("physio_clinic")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-# Spec: scan the RSS feeds every 6 hours.
+# Auto-scan RSS feeds every 6 hours for fresh content.
 app.conf.beat_schedule = {
     "fetch-news-every-6-hours": {
         "task": "news.tasks.fetch_news_task",
-        "schedule": crontab(minute=0, hour="*/6"),
+        "schedule": crontab(minute=0, hour="*/6"),  # Every 6 hours
         "options": {"expires": timedelta(hours=1)},
     },
 }

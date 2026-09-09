@@ -185,7 +185,12 @@ CORS_ALLOW_CREDENTIALS = True
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_TIMEZONE = "Asia/Tehran"
-CELERY_BEAT_SCHEDULE = {}  # Populated in later stages (e.g. news feed every 6h).
+CELERY_BEAT_SCHEDULE = {
+    "fetch-news-every-6-hours": {
+        "task": "news.tasks.fetch_news_task",
+        "schedule": 21600.0,  # Every 6 hours (6 * 60 * 60)
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Internationalization — Persian primary, UTC storage
